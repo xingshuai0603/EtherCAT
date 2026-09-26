@@ -1,0 +1,353 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:EtherCAT.App.ViewModels"
+        x:Class="EtherCAT.App.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Width="1180" Height="760"
+        Title="EtherCAT 主站 (.NET + Avalonia)">
+  <Window.Resources>
+    <vm:InverseBooleanConverter x:Key="InverseBool" />
+  </Window.Resources>
+
+  <Window.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Opacity" Value="0.7" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.value">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="Margin" Value="2" />
+      <Setter Property="Padding" Value="10,4" />
+    </Style>
+    <Style Selector="Border.card">
+      <Setter Property="BorderBrush" Value="#22000000" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="10" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- 顶部：连接与状态 -->
+    <Border Grid.Row="0" Padding="10" BorderBrush="#22000000" BorderThickness="0,0,0,1">
+      <StackPanel Spacing="8">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <CheckBox Content="仿真模式（虚拟从站）" IsChecked="{Binding UseSimulation}" VerticalAlignment="Center" />
+          <TextBlock Text="仿真拓扑：" Classes="label" IsVisible="{Binding IsSimulationConfigVisible}" />
+          <ComboBox Width="290" ItemsSource="{Binding SimulationPresets}" SelectedItem="{Binding SelectedPreset}"
+                    IsVisible="{Binding IsSimulationConfigVisible}" />
+          <TextBlock Text="网卡：" Classes="label" />
+          <ComboBox Width="360" ItemsSource="{Binding Adapters}" SelectedItem="{Binding SelectedAdapter}"
+                    IsEnabled="{Binding !UseSimulation}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Description}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Content="连接" Command="{Binding ConnectCommand}" />
+          <Button Content="断开" Command="{Binding DisconnectCommand}" />
+          <Button Content="重载 ESI" Command="{Binding ReloadEsiCommand}" />
+          <TextBlock Text="{Binding EsiSummary}" Classes="label" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="扫描节点" Command="{Binding ScanCommand}" />
+          <Button Content="配置并进入 OP" Command="{Binding ConfigureCommand}" />
+          <Button Content="启动周期" Command="{Binding StartCyclicCommand}" />
+          <Button Content="停止周期" Command="{Binding StopCyclicCommand}" />
+          <TextBlock Text="周期(µs)：" Classes="label" />
+          <TextBox Width="80" Text="{Binding CycleTimeUs}" />
+          <CheckBox Content="启用 DC" IsChecked="{Binding UseDistributedClock}" VerticalAlignment="Center" />
+          <TextBlock Text="WKC：" Classes="label" />
+          <TextBlock Text="{Binding WkcText}" Classes="value" />
+          <TextBlock Text="{Binding StatusText}" Classes="value" FontWeight="SemiBold" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- 中部：分页 -->
+    <TabControl Grid.Row="1" Margin="8">
+      <!-- 从站扫描 -->
+      <TabItem Header="节点扫描">
+        <Grid ColumnDefinitions="*,420" Margin="4">
+          <Border Grid.Column="0" Classes="card" Margin="0,0,8,0">
+            <DockPanel>
+              <TextBlock DockPanel.Dock="Top" Text="从站列表" FontWeight="SemiBold" Margin="0,0,0,6" />
+              <ListBox ItemsSource="{Binding Slaves}" SelectedItem="{Binding SelectedSlave}">
+                <ListBox.ItemTemplate>
+                  <DataTemplate>
+                    <Grid ColumnDefinitions="36,*,120,90,110,90" Margin="2">
+                      <TextBlock Grid.Column="0" Text="{Binding Index}" />
+                      <TextBlock Grid.Column="1" Text="{Binding Name}" />
+                      <TextBlock Grid.Column="2" Text="{Binding Vendor}" />
+                      <TextBlock Grid.Column="3" Text="{Binding ProductCode}" />
+                      <TextBlock Grid.Column="4" Text="{Binding Kind}" />
+                      <TextBlock Grid.Column="5" Text="{Binding StateText}" />
+                    </Grid>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </DockPanel>
+          </Border>
+
+          <Border Grid.Column="1" Classes="card">
+            <StackPanel Spacing="6" DataContext="{Binding SelectedSlave}">
+              <TextBlock Text="从站详情" FontWeight="SemiBold" />
+              <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="名称" Classes="label" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Name}" Classes="value" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="厂商 ID" Classes="label" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Vendor}" Classes="value" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="产品码" Classes="label" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ProductCode}" Classes="value" />
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="版本号" Classes="label" />
+                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Revision}" Classes="value" />
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="序列号" Classes="label" />
+                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Serial}" Classes="value" />
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="状态" Classes="label" />
+                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding StateText}" Classes="value" />
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="PDO 映射" Classes="label" />
+                <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Mapping}" Classes="value" />
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="ESI 文件" Classes="label" />
+                <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding EsiFile}" Classes="value" />
+              </Grid>
+            </StackPanel>
+          </Border>
+        </Grid>
+      </TabItem>
+
+      <!-- 伺服控制 -->
+      <TabItem Header="伺服驱动">
+        <ScrollViewer>
+          <StackPanel>
+            <TextBlock Text="尚未识别到伺服驱动器，请先『连接』并『扫描节点』。"
+                       IsVisible="{Binding HasDrives, Converter={StaticResource InverseBool}}"
+                       Margin="12,8" Opacity="0.6" />
+            <ItemsControl ItemsSource="{Binding Drives}" IsVisible="{Binding HasDrives}" Margin="4">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Classes="card">
+                  <StackPanel Spacing="6">
+                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                    <StackPanel Orientation="Horizontal" Spacing="14">
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="状态：" Classes="label" />
+                        <TextBlock Text="{Binding StateText}" Classes="value" FontWeight="SemiBold" />
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="状态字：" Classes="label" />
+                        <TextBlock Text="{Binding StatuswordText}" Classes="value" />
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="模式：" Classes="label" />
+                        <TextBlock Text="{Binding ModeText}" Classes="value" />
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="位置：" Classes="label" />
+                        <TextBlock Text="{Binding PositionText}" Classes="value" />
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="速度：" Classes="label" />
+                        <TextBlock Text="{Binding VelocityText}" Classes="value" />
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="转矩：" Classes="label" />
+                        <TextBlock Text="{Binding TorqueText}" Classes="value" />
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="错误码：" Classes="label" />
+                        <TextBlock Text="{Binding ErrorText}" Classes="value" />
+                      </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Button Content="使能" Command="{Binding EnableCommand}" />
+                      <Button Content="断电" Command="{Binding DisableCommand}" />
+                      <Button Content="故障复位" Command="{Binding FaultResetCommand}" />
+                      <Button Content="停止" Command="{Binding StopCommand}" />
+                      <Button Content="Jog -" Command="{Binding JogBackwardCommand}" />
+                      <Button Content="Jog +" Command="{Binding JogForwardCommand}" />
+                      <Button Content="回零" Command="{Binding HomeCommand}" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Text="模式" Classes="label" />
+                      <ComboBox Width="220" ItemsSource="{Binding Modes}" SelectedItem="{Binding SelectedMode}" />
+                      <TextBlock Text="目标速度" Classes="label" />
+                      <TextBox Width="110" Text="{Binding TargetVelocity}" />
+                      <Button Content="速度运行" Command="{Binding ApplyVelocityCommand}" />
+                      <TextBlock Text="目标位置" Classes="label" />
+                      <TextBox Width="110" Text="{Binding TargetPosition}" />
+                      <Button Content="绝对定位" Command="{Binding MoveAbsoluteCommand}" />
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding LastError}" Foreground="OrangeRed" FontSize="12" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- IO -->
+      <TabItem Header="IO 模块">
+        <ScrollViewer>
+          <StackPanel>
+            <TextBlock Text="尚未识别到 IO 模块，请先『连接』并『扫描节点』。"
+                       IsVisible="{Binding HasIoModules, Converter={StaticResource InverseBool}}"
+                       Margin="12,8" Opacity="0.6" />
+            <ItemsControl ItemsSource="{Binding IoModules}" IsVisible="{Binding HasIoModules}" Margin="4">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Classes="card">
+                  <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                      <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                      <TextBlock Text="{Binding InputWordText}" Classes="value" />
+                      <TextBlock Text="{Binding OutputWordText}" Classes="value" />
+                      <Button Content="全部置位" Command="{Binding AllOutputsOnCommand}" />
+                      <Button Content="全部清零" Command="{Binding AllOutputsOffCommand}" />
+                    </StackPanel>
+
+                    <TextBlock Text="数字量输入 (DI)" Classes="label" />
+                    <ItemsControl ItemsSource="{Binding Inputs}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <WrapPanel />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <ToggleButton Content="{Binding Name}" IsChecked="{Binding Value}"
+                                        IsEnabled="False" Width="86" Margin="2" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Text="数字量输出 (DO) —— 点击切换" Classes="label" />
+                    <ItemsControl ItemsSource="{Binding Outputs}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <WrapPanel />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <ToggleButton Content="{Binding Name}" IsChecked="{Binding Value}"
+                                        Width="86" Margin="2" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <StackPanel Spacing="8" IsVisible="{Binding HasAnalog}">
+                      <TextBlock Text="模拟量输入 (AI) —— 实时监测" Classes="label" />
+                      <ItemsControl ItemsSource="{Binding AnalogInputs}">
+                        <ItemsControl.ItemsPanel>
+                          <ItemsPanelTemplate>
+                            <WrapPanel />
+                          </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <Border Classes="card" Padding="8" Margin="2">
+                              <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="{Binding Name}" Width="100" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding Volts, StringFormat={}{0:F3} V}"
+                                           FontWeight="SemiBold" Width="84" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding RawText}" Classes="label" Width="64" VerticalAlignment="Center" />
+                              </StackPanel>
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+
+                      <TextBlock Text="模拟量输出 (AO) —— 拖动设定电压 (±10 V)" Classes="label" />
+                      <ItemsControl ItemsSource="{Binding AnalogOutputs}">
+                        <ItemsControl.ItemsPanel>
+                          <ItemsPanelTemplate>
+                            <WrapPanel />
+                          </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <Border Classes="card" Padding="8" Margin="2">
+                              <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="{Binding Name}" Width="100" VerticalAlignment="Center" />
+                                <Slider Minimum="-10" Maximum="10" Width="160"
+                                        Value="{Binding Volts}" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding Volts, StringFormat={}{0:F3} V}"
+                                           Width="84" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding RawText}" Classes="label" Width="64" VerticalAlignment="Center" />
+                              </StackPanel>
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- PDO 监视 -->
+      <TabItem Header="PDO 监视">
+        <Border Classes="card" Margin="4">
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Top" Text="过程数据变量（实时刷新）" FontWeight="SemiBold" Margin="0,0,0,6" />
+            <TextBlock DockPanel.Dock="Top"
+                       Text="尚未加载过程数据变量，请点击『配置并进入 OP』。"
+                       IsVisible="{Binding HasPdoData, Converter={StaticResource InverseBool}}"
+                       Margin="0,0,0,6" Opacity="0.6" />
+            <ScrollViewer>
+              <ItemsControl ItemsSource="{Binding PdoVariables}" IsVisible="{Binding HasPdoData}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Grid ColumnDefinitions="60,80,220,80,60,220" Margin="2">
+                      <TextBlock Grid.Column="0" Text="{Binding SlaveIndex}" />
+                      <TextBlock Grid.Column="1" Text="{Binding Direction}" />
+                      <TextBlock Grid.Column="2" Text="{Binding Name}" />
+                      <TextBlock Grid.Column="3" Text="{Binding Index}" />
+                      <TextBlock Grid.Column="4" Text="{Binding Bits}" />
+                      <TextBlock Grid.Column="5" Text="{Binding ValueText}" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </DockPanel>
+        </Border>
+      </TabItem>
+
+      <!-- 日志 -->
+      <TabItem Header="日志">
+        <Border Classes="card" Margin="4">
+          <DockPanel>
+            <Button DockPanel.Dock="Top" Content="清空" Command="{Binding ClearLogCommand}"
+                    HorizontalAlignment="Left" />
+            <ListBox ItemsSource="{Binding LogLines}" Margin="0,6,0,0" />
+          </DockPanel>
+        </Border>
+      </TabItem>
+    </TabControl>
+
+    <!-- 底部状态栏 -->
+    <Border Grid.Row="2" Padding="8" BorderBrush="#22000000" BorderThickness="0,1,0,0">
+      <StackPanel Orientation="Horizontal" Spacing="16">
+        <TextBlock Text="{Binding StatusText}" />
+        <TextBlock Text="{Binding WkcText}" />
+      </StackPanel>
+    </Border>
+  </Grid>
+</Window>

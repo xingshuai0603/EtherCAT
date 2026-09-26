@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/EtherCAT.App/EtherCAT.App.csproj" />
+    <Project Path="src/EtherCAT.Core/EtherCAT.Core.csproj" />
+    <Project Path="src/EtherCAT.Demo/EtherCAT.Demo.csproj" />
+  </Folder>
+</Solution>
