@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "pyqe8WLw2Xo=",
+  "dgSpecHash": "63nQ3GhWsBI=",
   "success": true,
-  "projectFilePath": "D:\\Library\\EtherCAT\\src\\EtherCAT.Core\\EtherCAT.Core.csproj",
+  "projectFilePath": "D:\\Github\\EtherCAT\\src\\EtherCAT.Core\\EtherCAT.Core.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

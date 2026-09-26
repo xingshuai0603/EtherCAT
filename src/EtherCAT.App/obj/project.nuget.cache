@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "2c4W/0eEkFY=",
+  "dgSpecHash": "HQgO3RNP9mI=",
   "success": true,
-  "projectFilePath": "D:\\Library\\EtherCAT\\src\\EtherCAT.App\\EtherCAT.App.csproj",
+  "projectFilePath": "D:\\Github\\EtherCAT\\src\\EtherCAT.App\\EtherCAT.App.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\simon\\.nuget\\packages\\avalonia\\11.3.22\\avalonia.11.3.22.nupkg.sha512",
     "C:\\Users\\simon\\.nuget\\packages\\avalonia.angle.windows.natives\\2.1.25547.20250602\\avalonia.angle.windows.natives.2.1.25547.20250602.nupkg.sha512",

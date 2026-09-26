@@ -1,0 +1,13 @@
+D:\Github\EtherCAT\src\EtherCAT.Core\bin\Debug\net8.0\EtherCAT.Core.deps.json
+D:\Github\EtherCAT\src\EtherCAT.Core\bin\Debug\net8.0\EtherCAT.Core.dll
+D:\Github\EtherCAT\src\EtherCAT.Core\bin\Debug\net8.0\EtherCAT.Core.pdb
+D:\Github\EtherCAT\src\EtherCAT.Core\obj\Debug\net8.0\EtherCAT.Core.GeneratedMSBuildEditorConfig.editorconfig
+D:\Github\EtherCAT\src\EtherCAT.Core\obj\Debug\net8.0\EtherCAT.Core.AssemblyInfoInputs.cache
+D:\Github\EtherCAT\src\EtherCAT.Core\obj\Debug\net8.0\EtherCAT.Core.AssemblyInfo.cs
+D:\Github\EtherCAT\src\EtherCAT.Core\obj\Debug\net8.0\EtherCAT.Core.csproj.CoreCompileInputs.cache
+D:\Github\EtherCAT\src\EtherCAT.Core\obj\Debug\net8.0\EtherCAT.Core.sourcelink.json
+D:\Github\EtherCAT\src\EtherCAT.Core\obj\Debug\net8.0\EtherCAT.Core.dll
+D:\Github\EtherCAT\src\EtherCAT.Core\obj\Debug\net8.0\refint\EtherCAT.Core.dll
+D:\Github\EtherCAT\src\EtherCAT.Core\obj\Debug\net8.0\EtherCAT.Core.pdb
+D:\Github\EtherCAT\src\EtherCAT.Core\obj\Debug\net8.0\ref\EtherCAT.Core.dll
+D:\Github\EtherCAT\src\EtherCAT.Core\obj\Debug\net8.0\EtherCAT.B9F9F494.Up2Date

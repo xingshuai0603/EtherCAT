@@ -1298,11 +1298,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Library\\EtherCAT\\src\\EtherCAT.App\\EtherCAT.App.csproj",
+      "projectUniqueName": "D:\\Github\\EtherCAT\\src\\EtherCAT.App\\EtherCAT.App.csproj",
       "projectName": "EtherCAT.App",
-      "projectPath": "D:\\Library\\EtherCAT\\src\\EtherCAT.App\\EtherCAT.App.csproj",
+      "projectPath": "D:\\Github\\EtherCAT\\src\\EtherCAT.App\\EtherCAT.App.csproj",
       "packagesPath": "C:\\Users\\simon\\.nuget\\packages\\",
-      "outputPath": "D:\\Library\\EtherCAT\\src\\EtherCAT.App\\obj\\",
+      "outputPath": "D:\\Github\\EtherCAT\\src\\EtherCAT.App\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -1324,8 +1324,8 @@
           "framework": "net8.0",
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\Library\\EtherCAT\\src\\EtherCAT.Core\\EtherCAT.Core.csproj": {
-              "projectPath": "D:\\Library\\EtherCAT\\src\\EtherCAT.Core\\EtherCAT.Core.csproj"
+            "D:\\Github\\EtherCAT\\src\\EtherCAT.Core\\EtherCAT.Core.csproj": {
+              "projectPath": "D:\\Github\\EtherCAT\\src\\EtherCAT.Core\\EtherCAT.Core.csproj"
             }
           }
         }

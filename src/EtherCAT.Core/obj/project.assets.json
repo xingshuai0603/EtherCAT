@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Library\\EtherCAT\\src\\EtherCAT.Core\\EtherCAT.Core.csproj",
+      "projectUniqueName": "D:\\Github\\EtherCAT\\src\\EtherCAT.Core\\EtherCAT.Core.csproj",
       "projectName": "EtherCAT.Core",
-      "projectPath": "D:\\Library\\EtherCAT\\src\\EtherCAT.Core\\EtherCAT.Core.csproj",
+      "projectPath": "D:\\Github\\EtherCAT\\src\\EtherCAT.Core\\EtherCAT.Core.csproj",
       "packagesPath": "C:\\Users\\simon\\.nuget\\packages\\",
-      "outputPath": "D:\\Library\\EtherCAT\\src\\EtherCAT.Core\\obj\\",
+      "outputPath": "D:\\Github\\EtherCAT\\src\\EtherCAT.Core\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
