@@ -197,6 +197,98 @@
         </ScrollViewer>
       </TabItem>
 
+      <!-- ACS 驱动器 -->
+      <TabItem Header="ACS 驱动器">
+        <ScrollViewer>
+          <StackPanel>
+            <TextBlock Text="尚未识别到 ACS 驱动器（标准 CiA402 伺服），请先『连接』并『扫描节点』。"
+                       IsVisible="{Binding HasAcsDrives, Converter={StaticResource InverseBool}}"
+                       Margin="12,8" Opacity="0.6" />
+            <ItemsControl ItemsSource="{Binding AcsDrives}" IsVisible="{Binding HasAcsDrives}" Margin="4">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Classes="card">
+                  <StackPanel Spacing="6">
+                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                    <StackPanel Orientation="Horizontal" Spacing="14">
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="状态：" Classes="label" />
+                        <TextBlock Text="{Binding StateText}" Classes="value" FontWeight="SemiBold" />
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="状态字：" Classes="label" />
+                        <TextBlock Text="{Binding StatuswordText}" Classes="value" />
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="模式：" Classes="label" />
+                        <TextBlock Text="{Binding ModeText}" Classes="value" />
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="位置：" Classes="label" />
+                        <TextBlock Text="{Binding PositionText}" Classes="value" />
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="速度：" Classes="label" />
+                        <TextBlock Text="{Binding VelocityText}" Classes="value" />
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="转矩：" Classes="label" />
+                        <TextBlock Text="{Binding TorqueText}" Classes="value" />
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="错误码：" Classes="label" />
+                        <TextBlock Text="{Binding ErrorText}" Classes="value" />
+                      </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Button Content="使能" Command="{Binding EnableCommand}" />
+                      <Button Content="使能并回零" Command="{Binding EnableAndHomeCommand}" />
+                      <Button Content="断电" Command="{Binding DisableCommand}" />
+                      <Button Content="故障复位" Command="{Binding FaultResetCommand}" />
+                      <Button Content="急停" Command="{Binding QuickStopCommand}" />
+                      <Button Content="停止" Command="{Binding StopCommand}" />
+                      <Button Content="Jog -" Command="{Binding JogBackwardCommand}" />
+                      <Button Content="Jog +" Command="{Binding JogForwardCommand}" />
+                      <Button Content="回零" Command="{Binding HomeCommand}" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Text="模式" Classes="label" />
+                      <ComboBox Width="200" ItemsSource="{Binding Modes}" SelectedItem="{Binding SelectedMode}" />
+                      <TextBlock Text="目标速度" Classes="label" />
+                      <TextBox Width="110" Text="{Binding TargetVelocity}" />
+                      <Button Content="速度运行" Command="{Binding VelocityCommand}" />
+                      <TextBlock Text="目标位置" Classes="label" />
+                      <TextBox Width="110" Text="{Binding TargetPosition}" />
+                      <Button Content="绝对定位" Command="{Binding MoveAbsoluteCommand}" />
+                      <Button Content="相对定位" Command="{Binding MoveRelativeCommand}" />
+                      <TextBlock Text="目标转矩" Classes="label" />
+                      <TextBox Width="80" Text="{Binding TargetTorque}" />
+                      <Button Content="转矩运行" Command="{Binding TorqueCommand}" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="14">
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="回零完成：" Classes="label" />
+                        <TextBlock Text="{Binding HomingAttained}" Classes="value" />
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="到位：" Classes="label" />
+                        <TextBlock Text="{Binding TargetReached}" Classes="value" />
+                      </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding LastError}" Foreground="OrangeRed" FontSize="12" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
       <!-- IO -->
       <TabItem Header="IO 模块">
         <ScrollViewer>

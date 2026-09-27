@@ -8,6 +8,7 @@ using EtherCAT.Master;
 //
 //   dotnet run --project src/EtherCAT.Demo                 标准冒烟测试（伺服 + IO + 伺服）
 //   dotnet run --project src/EtherCAT.Demo -- --virtual    大型虚拟设备演示（64点IO / 混合IO / 单轴 / 双轴伺服）
+//   dotnet run --project src/EtherCAT.Demo -- --acs        ACS 驱动器高层操作演示（使能/回零/点动/定位/速度/转矩）
 //   dotnet run --project src/EtherCAT.Demo -- --export-esi 导出内置虚拟设备的 ESI 描述文件
 //
 // 用真实硬件时只需把 SimulatedLink 换成 NpcapLink（见 README）。
@@ -32,9 +33,11 @@ if (loaded == 0)
     return 1;
 }
 
-return commandArgs.Contains("--virtual")
-    ? RunVirtualDeviceDemo(esi)
-    : RunStandardSmokeTest(esi);
+if (commandArgs.Contains("--acs"))
+    return RunAcsDemo(esi);
+if (commandArgs.Contains("--virtual"))
+    return RunVirtualDeviceDemo(esi);
+return RunStandardSmokeTest(esi);
 
 // ------------------------------------------------------------------ 标准冒烟测试
 
@@ -342,6 +345,158 @@ static bool WaitFor(Func<bool> predicate, int timeoutMs)
         Thread.Sleep(10);
     }
     return predicate();
+}
+
+// ------------------------------------------------------------------ ACS 驱动器操作演示
+
+static int RunAcsDemo(EsiDatabase esi)
+{
+    var virtualDevices = esi.Devices.Where(d => VirtualDeviceFactory.IsVirtualDevice(d)).ToList();
+    if (virtualDevices.Count == 0)
+    {
+        Console.Error.WriteLine($"ESI 目录中没有虚拟设备描述，请先执行：dotnet run --project src/EtherCAT.Demo -- --export-esi");
+        return 1;
+    }
+
+    // 用内置虚拟伺服（单轴 + 双轴）组一条网络，验证多轴 ACS 操作
+    var big = virtualDevices.FirstOrDefault(d => d.ProductCode == VirtualDeviceFactory.ProductBigServo);
+    var dual = virtualDevices.FirstOrDefault(d => d.ProductCode == VirtualDeviceFactory.ProductDualAxisServo);
+    var devices = new List<EsiDevice>();
+    if (big != null) devices.Add(big);
+    if (dual != null) devices.Add(dual);
+    if (devices.Count == 0)
+    {
+        Console.Error.WriteLine("缺少虚拟伺服设备，无法演示 ACS 操作");
+        return 1;
+    }
+
+    Console.WriteLine($"虚拟网络：{string.Join(" → ", devices.Select(d => d.DisplayName))}");
+
+    var driveOptions = new VirtualDriveOptions
+    {
+        EncoderResolution = 10000,
+        MaxVelocity = 800_000,
+        MaxAcceleration = 3_000_000,
+        PositionLoopGain = 150,
+        PositiveLimit = 1_500_000,
+        NegativeLimit = -1_500_000,
+        HomeSwitchWindow = 2000,
+        PositionWindow = 500
+    };
+
+    using var link = SimulatedLink.CreateFromEsi(devices, 1, driveOptions);
+    link.Open("sim0");
+
+    using var master = new EthercatMaster(link, esi, new DelegateLog(Console.WriteLine));
+    int count = master.Scan();
+    Console.WriteLine($"扫描到从站数：{count}");
+    if (count == 0) return 1;
+
+    if (!master.Configure())
+    {
+        Console.Error.WriteLine("配置失败，未能进入 OP");
+        return 1;
+    }
+
+    Console.WriteLine($"镜像大小 {master.Image.Size} 字节，期望 WKC = {master.ExpectedWorkingCounter}");
+    master.CycleTimeUs = 1000;
+    master.StartCyclic();
+
+    bool ok = true;
+
+    // ---------------- ACS 高层操作：使能并回零 ----------------
+    var acsDrives = DeviceFactory.FindAcsDrives(master, Console.WriteLine);
+    Console.WriteLine($"\n[ACS] 发现 {acsDrives.Count} 个轴：{string.Join("、", acsDrives.Select(d => d.DisplayName))}");
+    if (acsDrives.Count == 0) return 1;
+
+    foreach (var d in acsDrives)
+    {
+        if (!d.EnableAndHome(17, 3000, 8000))
+        {
+            Console.Error.WriteLine($"  {d.DisplayName} 使能并回零失败 (0x{d.Statusword:X4})");
+            ok = false;
+        }
+        else
+        {
+            Console.WriteLine($"  {d.DisplayName} 使能并回零完成：pos={d.Position} (0x{d.Statusword:X4})");
+        }
+    }
+
+    var axis1 = acsDrives.First();
+
+    // 绝对定位
+    int absTarget = 300_000;
+    axis1.MoveAbsolute(absTarget);
+    bool reached = axis1.WaitTargetReached(8000);
+    Console.WriteLine($"  绝对定位 {absTarget} → 实际 {axis1.Position}，到位={reached}");
+    ok &= reached && Math.Abs(axis1.Position - absTarget) < 5000;
+
+    // 相对定位
+    int beforeRel = axis1.Position;
+    axis1.MoveRelative(100_000);
+    axis1.WaitTargetReached(8000);
+    Console.WriteLine($"  相对 +100000：{beforeRel} → {axis1.Position}");
+    ok &= Math.Abs(axis1.Position - (beforeRel + 100_000)) < 5000;
+
+    // 点动（速度模式）
+    axis1.Jog(200_000);
+    Thread.Sleep(300);
+    int jogVel = axis1.Velocity;
+    axis1.Stop();
+    Thread.Sleep(300);
+    Console.WriteLine($"  点动：速度={jogVel}");
+    ok &= Math.Abs(jogVel) > 1000;
+
+    // 速度模式
+    axis1.SetVelocity(-150_000);
+    Thread.Sleep(300);
+    int velMode = axis1.Velocity;
+    axis1.Stop();
+    Thread.Sleep(300);
+    Console.WriteLine($"  速度模式：速度={velMode}");
+    ok &= Math.Abs(velMode) > 1000;
+
+    // 转矩模式（仅校验“发出了转矩指令且从站有转矩响应”，真实硬件以此判断抱闸/负载）
+    try
+    {
+        axis1.SetTorque(200);    // 20% 额定
+        Thread.Sleep(300);
+        int tq = axis1.Torque;
+        axis1.Stop();
+        Thread.Sleep(200);
+        Console.WriteLine($"  转矩模式：指令 200 → 实际 {tq}");
+        ok &= Math.Abs(tq) > 0;
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  转矩模式跳过（该从站不支持目标转矩 PDO/对象）：{ex.Message}");
+    }
+
+    // 故障注入与复位
+    var behaviors = link.Slaves.Select(s => s.Behavior).OfType<VirtualDriveBehavior>().ToList();
+    if (behaviors.Count > 0)
+    {
+        behaviors[0].TriggerFault(0, 0x8611);
+        Thread.Sleep(60);
+        bool sawFault = axis1.Fault;
+        axis1.FaultReset();
+        Thread.Sleep(60);
+        bool recovered = !axis1.Fault || axis1.Enable(2000);
+        Console.WriteLine($"  故障注入 0x8611 → Fault={sawFault}，复位后 {axis1.StateText}");
+        ok &= sawFault && recovered;
+    }
+
+    axis1.Disable();
+    Thread.Sleep(50);
+
+    // ---------------- 周期统计 ----------------
+    int wkcErrors = master.WorkingCounterErrors;
+    Console.WriteLine($"\n周期通信：WKC = {master.LastWorkingCounter} / {master.ExpectedWorkingCounter}，错误计数 {wkcErrors}");
+    ok &= master.LastWorkingCounter == master.ExpectedWorkingCounter && wkcErrors == 0;
+
+    master.StopCyclic();
+    Console.WriteLine(ok ? "== ACS 驱动器操作演示通过 ==" : "== ACS 驱动器操作演示失败 ==");
+    return ok ? 0 : 1;
 }
 
 static string FindEsiDirectory()

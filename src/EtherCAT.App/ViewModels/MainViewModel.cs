@@ -446,6 +446,7 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<SlaveViewModel> Slaves { get; } = new();
     public ObservableCollection<DriveViewModel> Drives { get; } = new();
+    public ObservableCollection<AcsDriveViewModel> AcsDrives { get; } = new();
     public ObservableCollection<IoModuleViewModel> IoModules { get; } = new();
     public ObservableCollection<PdoVariableViewModel> PdoVariables { get; } = new();
     public ObservableCollection<string> LogLines { get; } = new();
@@ -454,6 +455,8 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
     public bool HasDrives => Drives.Count > 0;
     /// <summary>是否有 IO 模块</summary>
     public bool HasIoModules => IoModules.Count > 0;
+    /// <summary>是否有 ACS 驱动器（标准 CiA402 伺服，用于“ACS 驱动器”页签）</summary>
+    public bool HasAcsDrives => AcsDrives.Count > 0;
     /// <summary>是否已加载 PDO 过程数据变量</summary>
     public bool HasPdoData => PdoVariables.Count > 0;
 
@@ -641,6 +644,7 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
         IsCyclicRunning = false;
         Slaves.Clear();
         Drives.Clear();
+        AcsDrives.Clear();
         IoModules.Clear();
         PdoVariables.Clear();
         StatusText = "未连接";
@@ -717,11 +721,14 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
         if (_master == null) return;
 
         Drives.Clear();
+        AcsDrives.Clear();
         IoModules.Clear();
         PdoVariables.Clear();
 
         foreach (var drive in DeviceFactory.FindDrives(_master))
             Drives.Add(new DriveViewModel(drive));
+        foreach (var acs in DeviceFactory.FindAcsDrives(_master, Log))
+            AcsDrives.Add(new AcsDriveViewModel(acs));
         foreach (var module in DeviceFactory.FindIoModules(_master))
             IoModules.Add(new IoModuleViewModel(module));
 
@@ -740,6 +747,7 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
     private void UpdateDeviceModelFlags()
     {
         OnPropertyChanged(nameof(HasDrives));
+        OnPropertyChanged(nameof(HasAcsDrives));
         OnPropertyChanged(nameof(HasIoModules));
         OnPropertyChanged(nameof(HasPdoData));
     }
@@ -799,6 +807,8 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
                 slave.Refresh();
             foreach (var drive in Drives)
                 drive.Refresh();
+            foreach (var acs in AcsDrives)
+                acs.Refresh();
             foreach (var module in IoModules)
                 module.Refresh();
             foreach (var variable in PdoVariables)

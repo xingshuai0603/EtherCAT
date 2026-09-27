@@ -1,3 +1,4 @@
+using System;
 using EtherCAT.Master;
 
 namespace EtherCAT.Devices;
@@ -253,4 +254,13 @@ public static class DeviceFactory
             .Where(s => s.IsIoModule)
             .Select(s => new IoModule(s))
             .ToList();
+
+    /// <summary>发现网络中的 ACS 驱动器（标准 CiA402 伺服），每个轴封装为一个 <see cref="AcsDrive"/></summary>
+    public static List<AcsDrive> FindAcsDrives(EthercatMaster master, Action<string>? log = null)
+    {
+        var result = new List<AcsDrive>();
+        foreach (var drive in FindDrives(master))
+            result.Add(new AcsDrive(drive, log));
+        return result;
+    }
 }
